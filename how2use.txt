@@ -1,0 +1,21 @@
+Firstly, you need four open-source codes loaded from github:
+ SC_lio-sam  file_player_mulran  lt_slam  lt_removert
+
+SC_lio-sam:  https://www.youtube.com/watch?v=Y6DXlC34qlc&t=479s
+SC_lio-sam_Relocation: fyx's github
+(fyx has wrote a version of SC_lio-sam_Relocation in his github :) !)
+
+about the guide video of file_player_mulran and lt_slam (or lt_removert that GK promised) on YouTube:
+file_player_mulran: https://www.youtube.com/watch?v=uU-FC-GmHXA&t=45s
+lt_slam: https://www.youtube.com/watch?v=BXBTVurNToU
+lt_removert: waiting...
+
+
+Secondly, you should compile them correctly
+
+
+Thirdly, you should dowmload the parkinglot dataset(whatever you want, but with revisited parts)
+Google site: https://drive.google.com/drive/folders/1FNIU691AR2g04NlKBFCDL4APpxpzkfQp
+
+
+Note: more detail (especially the ssh of github) can be seen in the readme.md in lt_mapper decalared by Giseop Kim. 
