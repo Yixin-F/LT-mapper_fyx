@@ -70,7 +70,7 @@ the result is perfect ! :)
 	--when the sequence 01 ending, restart sequence 02 as the same steps 
 	--resultly, you can get two pointcloud map:
 	  "map_0_to_658_with_intensity.pcd" and "map_0_to_611_with_intensity.pcd"
-	  and verify them via cloudcompare
+	  and verify them via cloudcompare, as you can see only few drift exist
 
 Congratulations !! You have finished the LT-SLAM !!
 
