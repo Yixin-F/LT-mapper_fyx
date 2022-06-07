@@ -1,3 +1,6 @@
+
+2022/6/3  data & codes prepare:
+
 Firstly, you need four open-source codes loaded from github:
  SC_lio-sam  file_player_mulran  lt_slam  lt_removert
 
@@ -19,3 +22,58 @@ Google site: https://drive.google.com/drive/folders/1FNIU691AR2g04NlKBFCDL4APpxp
 
 
 Note: more detail (especially the ssh of github) can be seen in the readme.md in lt_mapper decalared by Giseop Kim. 
+
+
+-----------------------------------------------------------------------------------------------------------------------------
+
+
+2022/6/5 LT-SLAM process:
+
+0.prepare the data sequences, LT-mapper parkinglot dataset
+	-- using MulRan player to publish lidar and imu topics from the data directory
+	-- maybe there is diffrence from the guide video of file_player_mulran, but just publsih the topics
+
+1.generate session data for each session via running SC_lio-sam
+	--you should assign the path file to be saved
+	--just run the file_player_mulran and sc_lio-sam at the same time
+	--now we just use the 01&02 sequence of parkinglot dataset to genarate session data
+     --note: for sequence 01 we should skip few seconds at beginning
+	-- as you can see in the sc_lio-sam's running process, the loop closure of SC is enough better than RS.
+
+remenber that the goal of LT-SLAM is to align the trajectory of 01 and 02 !
+2.run LT-SLAM
+	--you need check the paths of datasets in lt-slam's config file
+	--LT-SLAM first detect and stitch sc-based loops
+	  and get rough initial transformation,
+	  then, finely stitch the two trajectories using radius-search(i.e. proximity)
+	--you will wait for a long time as isam2 running until DONE !
+	--verify the results !
+		we need the two files named with "*_data_central_sft_intersession_loops_txt"
+		central means that they are in the shared coordinate called central
+	--please open the two files ny cloudcompare
+	  and change the column scale 4&8&12 to x&y&z.
+the result is perfect ! :)
+
+3.aft LT-SLAM geting a good alignment, we should can get a merged pointcloudmap by each session map
+	--using the sc_lio-sam's python tools in file python(not python_tools_fyx)
+	--change the path of data_dir of data 01 
+	  and change the path of "f = open(..)" as "01_data_central_aft_intersession_loops.txt"
+	  and change the scan_idx_range_to_stack as the number of Scans genarated by 01 
+	  in file "makeMergedMap.py"
+	--copy "01_data_central_aft_intersession_loops.txt" into database 01(contains Scans genarated by 01)
+	--python3 makeMergedMap.py and wait... 
+	--maybe there is wrong about "pypcd", please install this module by command as
+		python3.x (use your python ver) -m pip install --user git+https://github.com/DanielPollithy/pypcd.git  (you just need correct the version of python, as like my python is 3.6)
+		I try above command many times but haven't success, yet I solve the problem about pypcd in python3 by follow steps:
+			pip3 install pypcd
+			exchange files in pypcd by https://github.com/boden-ai/pypcd :), you can see in file pypcd4py3
+	--when the sequence 01 ending, restart sequence 02 as the same steps 
+	--resultly, you can get two pointcloud map:
+	  "map_0_to_658_with_intensity.pcd" and "map_0_to_611_with_intensity.pcd"
+	  and verify them via cloudcompare
+
+Congratulations !! You have finished the LT-SLAM !!
+
+
+
+
