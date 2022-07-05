@@ -2,7 +2,7 @@
 
 bool cout_debug = false;
 
-
+// 读取每一帧激光扫描的bin文件
 void readBin(std::string _bin_path, pcl::PointCloud<PointType>::Ptr _pcd_ptr)
 {
  	std::fstream input(_bin_path.c_str(), ios::in | ios::binary);
@@ -24,7 +24,6 @@ void readBin(std::string _bin_path, pcl::PointCloud<PointType>::Ptr _pcd_ptr)
 	}
 	input.close();
 }
-
 
 namespace LTslamParam {
     // NOTE: kSessionStartIdxOffset in utility.h
@@ -134,6 +133,8 @@ std::vector<double> splitPoseLine(std::string _str_line, char _delimiter) {
     return parsed;
 }
 
+// 读取g2o的存储格式
+// 举例4：VERTEX_SE3:QUAT 99 -61.332581 -9.253125 0.131973 -0.004256 -0.005810 -0.625732 0.780005
 G2oLineInfo splitG2oFileLine(std::string _str_line) {
 
     std::stringstream ss(_str_line);
@@ -146,6 +147,7 @@ G2oLineInfo splitG2oFileLine(std::string _str_line) {
     }
 
 	G2oLineInfo parsed;
+    // 判断是结点还是边
 	if( isTwoStringSame(parsed_elms.at(0), G2oLineInfo::kVertexTypeName) )
 	{
 		parsed.type = parsed_elms.at(0);
@@ -187,6 +189,7 @@ void collect_digits(std::vector<int>& digits, int num) {
     digits.push_back(num % 10);
 }
 
+// 记录位姿
 void writePose3ToStream(std::fstream& _stream, gtsam::Pose3 _pose)
 {
     gtsam::Point3 t = _pose.translation();
@@ -275,7 +278,7 @@ float poseDistance(const gtsam::Pose3& p1, const gtsam::Pose3& p2)
 //     return sph_point;
 // }
 
-
+// ! 多分辨率range image
 // std::pair<int, int> resetRimgSize(const std::pair<float, float> _fov, const float _resize_ratio)
 // {
 //     // default is 1 deg x 1 deg 

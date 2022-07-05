@@ -27,7 +27,7 @@ void Session::allocateMemory()
     originPoses6D.reset(new pcl::PointCloud<PointTypePose>());
 }
 
-
+// 读取每个结点的位姿
 void Session::initKeyPoses(void)
 {
     for(auto & _node_info: nodes_)
@@ -62,7 +62,7 @@ void Session::initKeyPoses(void)
     originPoses6D->push_back( thisPose6D );
 } // initKeyPoses
 
-
+// isam2更新位姿图
 void Session::updateKeyPoses(const gtsam::ISAM2 * _isam, const gtsam::Pose3& _anchor_transform)
 {
     using gtsam::Pose3;

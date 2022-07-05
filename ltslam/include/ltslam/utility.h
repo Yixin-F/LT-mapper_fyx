@@ -16,10 +16,14 @@
 #include <visualization_msgs/MarkerArray.h>
 
 #include <Eigen/Dense>
+
 #include <opencv/cv.h>
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/eigen.hpp>
+#include <opencv2/highgui/highgui.hpp>
+
 #include <cv_bridge/cv_bridge.h>
+#include <image_transport/image_transport.h>
 
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
@@ -42,9 +46,6 @@
 #include <tf/transform_datatypes.h>
 #include <tf/transform_broadcaster.h>
  
-#include <opencv2/highgui/highgui.hpp>
-#include <image_transport/image_transport.h>
-
 #include <gtsam/inference/Symbol.h>
 #include <gtsam/nonlinear/Values.h>
 #include <gtsam/nonlinear/Marginals.h>
@@ -85,6 +86,7 @@
 #include <thread>
 #include <mutex>
 
+// ! 学习这个头文件！！
 #include <filesystem> // requires gcc version >= 8
 
 namespace fs = std::filesystem;
@@ -107,6 +109,7 @@ using std::endl;
 
 /*
     * A point cloud type that has 6D pose info ([x,y,z,roll,pitch,yaw] intensity is time stamp)
+        自己注册的点云数据格式
     */
 struct PointXYZIRPYT
 {
@@ -124,10 +127,12 @@ POINT_CLOUD_REGISTER_POINT_STRUCT (PointXYZIRPYT,
                                    (float, z, z) (float, intensity, intensity)
                                    (float, roll, roll) (float, pitch, pitch) (float, yaw, yaw)
                                    (double, time, time))
+
 using PointTypePose = PointXYZIRPYT;
 
 using PointType = pcl::PointXYZI;
 
+// g2o的图存储形式
 struct G2oLineInfo 
 {
     std::string type;
@@ -138,11 +143,12 @@ struct G2oLineInfo
     std::vector<double> trans;
     std::vector<double> quat;
 
+    // static静态成员生存期大于任何实例对象生存期, inline针对使用频率高且简单的变量或函数
     inline static const std::string kVertexTypeName = "VERTEX_SE3:QUAT";
     inline static const std::string kEdgeTypeName = "EDGE_SE3:QUAT";
 }; // G2oLine
 
-
+// ? 作用？
 struct SphericalPoint
 {
     float az; // azimuth 
@@ -160,6 +166,7 @@ namespace LTslamParam {
     int genAnchorNodeIdx (const int& _session_idx);
 } // namespace LTslamParam
 
+// good function
 pcl::PointCloud<PointType>::Ptr transformPointCloud(pcl::PointCloud<PointType>::Ptr cloudIn, PointTypePose* transformIn);
 
 float rad2deg(float radians); 
