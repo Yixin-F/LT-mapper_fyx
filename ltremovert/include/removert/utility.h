@@ -93,11 +93,12 @@ using pcPtr = pcl::PointCloud<PointType>::Ptr;
 const float kFlagNoPOINT = 10000.0; // no point constant, 10000 has no meaning, but must be larger than the maximum scan range (e.g., 200 meters)
 const float kValidDiffUpperBound = 200.0; // must smaller than kFlagNoPOINT
 
+// ? 球形点？？什么意思，就是rangeimage上的点信息
 struct SphericalPoint
 {
-    float az; // azimuth 
-    float el; // elevation
-    float r; // radius
+    float az; // azimuth，方位角
+    float el; // elevation，高度
+    float r; // radius，距离
 };
 
 float rad2deg(float radians);

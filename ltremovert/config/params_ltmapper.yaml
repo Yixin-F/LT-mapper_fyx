@@ -47,6 +47,7 @@ removert:
 
 
   # @ Range image resolution
+  # ? 具体看一下这个分辨率怎么搞，为什么是appx 25 deg / 64 ray ~ 0.4 deg per pixel，不应该[vfov = 50 (upper 25, lower 25), hfov = 360]？-> 50 deg / 64 ray，这是去了地面？
   # the below is actually magnifier ratio (i.e., 5 means x5 resolution, the x1 means 1 deg x 1 deg per pixel)
   # - recommend to use the first removing resolution's magnifier ratio should meet the seonsor vertical fov / number of rays 
   #     - e.g., HDL 64E of KITTI dataset -> appx 25 deg / 64 ray ~ 0.4 deg per pixel -> the magnifier ratio = 1/0.4 = 2.5
@@ -57,7 +58,8 @@ removert:
 
 
   # @ Removert params 
-  # about density 
+  # about density
+  # ? 做了一个八叉树下采样，而不是普通的体素下采样但这样会不会不准，需不需要弥补一下，比如原始点云对下采样之后的点云进行knn搜索
   downsample_voxel_size: 0.05 # user parameter but recommend to use 0.05 to make sure an enough density (this value is related to the removing resolution's expected performance)
 
   # about Static sensitivity (you need to tune these below two values, depends on the environement)

@@ -2,7 +2,7 @@
 
 bool cout_debug = false;
 
-
+// 读取每一激光帧的bin文件
 void readBin(std::string _bin_path, pcl::PointCloud<PointType>::Ptr _pcd_ptr)
 {
  	std::fstream input(_bin_path.c_str(), ios::in | ios::binary);
@@ -25,6 +25,7 @@ void readBin(std::string _bin_path, pcl::PointCloud<PointType>::Ptr _pcd_ptr)
 	input.close();
 }
 
+// 按某种分割符delimiter来读取每一行的位姿
 std::vector<double> splitPoseLine(std::string _str_line, char _delimiter) {
     std::vector<double> parsed;
     std::stringstream ss(_str_line);
@@ -35,6 +36,7 @@ std::vector<double> splitPoseLine(std::string _str_line, char _delimiter) {
     return parsed;
 }
 
+// 将扫描的笛卡尔坐标系点云转化进入球形坐标系，也就是rangeimage
 SphericalPoint cart2sph(const PointType & _cp)
 { // _cp means cartesian point
 
@@ -67,8 +69,10 @@ void transformGlobalMapToLocal(
 {
     // global to local (global2local)
     _map_local->clear();
+    // 将得到的每一帧pcd，由世界坐标系转换到base坐标系
     pcl::transformPointCloud(*_map_global, *_map_local, _base_pose_inverse);
-    pcl::transformPointCloud(*_map_local, *_map_local, _base2lidar); // _base2lidar == kSE3MatExtrinsicPoseBasetoLiDAR
+    // 再一个小转换
+    pcl::transformPointCloud(*_map_local, *_map_local, _base2lidar); // > _base2lidar == kSE3MatExtrinsicPoseBasetoLiDAR
 } // transformGlobalMapToLocal
 
 pcl::PointCloud<PointType>::Ptr parseProjectedPoints(const pcl::PointCloud<PointType>::Ptr &_scan,
@@ -100,6 +104,7 @@ std::pair<cv::Mat, cv::Mat> map2RangeImg(const pcl::PointCloud<PointType>::Ptr &
     const int kNumRimgCol = _rimg_size.second;
 
     // @ range image initizliation
+    // ragne & index 分开存储
     cv::Mat rimg = cv::Mat(kNumRimgRow, kNumRimgCol, CV_32FC1, cv::Scalar::all(kFlagNoPOINT)); // float matrix, save range value
     cv::Mat rimg_ptidx = cv::Mat(kNumRimgRow, kNumRimgCol, CV_32SC1, cv::Scalar::all(0));      // int matrix, save point (of global map) index
 
@@ -111,7 +116,7 @@ std::pair<cv::Mat, cv::Mat> map2RangeImg(const pcl::PointCloud<PointType>::Ptr &
     for (int pt_idx = 0; pt_idx < num_points; ++pt_idx)
     {
         PointType this_point = _scan->points[pt_idx];
-        SphericalPoint sph_point = cart2sph(this_point);
+        SphericalPoint sph_point = cart2sph(this_point); // 进入球形坐标系
 
         // @ note about vfov: e.g., (+ V_FOV/2) to adjust [-15, 15] to [0, 30]
         // @ min and max is just for the easier (naive) boundary checks.
@@ -131,6 +136,8 @@ std::pair<cv::Mat, cv::Mat> map2RangeImg(const pcl::PointCloud<PointType>::Ptr &
         // @         also, a point A and B lied in different for-segments do not tend to correspond to the same pixel,
         // #               so we can assume practically there are few race conditions.
         // @ P.S. some explicit mutexing directive makes the code even slower ref: https://stackoverflow.com/questions/2396430/how-to-use-lock-in-openmp
+        // ! 意思是会有一些距离不同的点出现在同一pixel中
+        // > 这个地方，其实可以最后再平滑一下，不是单纯的判断这个点是否是动态点，一是可以将相邻动态点聚类检查，二是可以实例分割辅助
         if (curr_range < rimg.at<float>(pixel_idx_row, pixel_idx_col))
         {
             rimg.at<float>(pixel_idx_row, pixel_idx_col) = curr_range;
@@ -157,6 +164,7 @@ std::pair<cv::Mat, cv::Mat> map2RangeImg(const pcl::PointCloud<PointType>::Ptr &
 //     ROS_INFO_STREAM("\033[1;32m Octree Downsampled pointcloud have: " << _to_save->points.size() << " points.\033[0m");
 // } // octreeDownsampling
 
+// base到世界坐标系
 pcl::PointCloud<PointType>::Ptr local2global(const pcl::PointCloud<PointType>::Ptr &_scan_local, 
                                 const Eigen::Matrix4d &_scan_pose, const Eigen::Matrix4d &_lidar2base)
 {
@@ -185,6 +193,7 @@ pcl::PointCloud<PointType>::Ptr mergeScansWithinGlobalCoordUtil(
         pcl::transformPointCloud(*scan_global_coord, *scan_global_coord, ii_pose);
 
         // merge the scan into the global map
+        // 将该帧放入世界坐标系中
         *ptcloud_merged += *scan_global_coord;
     }
 
@@ -201,6 +210,7 @@ pcl::PointCloud<PointType>::Ptr global2local(const pcl::PointCloud<PointType>::P
     return scan_local;
 }
 
+// > 八叉树下采样更注重每个voxel的递进关系，更方便进行knn等
 void octreeDownsampling(const pcl::PointCloud<PointType>::Ptr &_src, 
                               pcl::PointCloud<PointType>::Ptr &_to_save,
                               const float _kDownsampleVoxelSize)
@@ -218,7 +228,7 @@ void octreeDownsampling(const pcl::PointCloud<PointType>::Ptr &_src,
     _to_save->height = _to_save->points.size(); // make sure again the format of the downsampled point cloud
 } // octreeDownsampling
 
-
+// > 重置分辨率
 std::pair<int, int> resetRimgSize(const std::pair<float, float> _fov, const float _resize_ratio)
 {
     // default is 1 deg x 1 deg 

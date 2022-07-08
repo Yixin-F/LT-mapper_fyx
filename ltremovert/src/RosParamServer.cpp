@@ -4,6 +4,7 @@
 RosParamServer::RosParamServer()
 : nh(nh_super)
 {
+    // .launch文件里导入yaml文件
     nh.param<bool>("removert/isScanFileKITTIFormat", isScanFileKITTIFormat_, true);
 
     nh.param<float>("removert/rimg_color_min", rimg_color_min_, 0.0);
@@ -11,7 +12,7 @@ RosParamServer::RosParamServer()
     kRangeColorAxis = std::pair<float, float> {rimg_color_min_, rimg_color_max_}; // meter
     kRangeColorAxisForDiff = std::pair<float, float>{0.0, 0.5}; // meter 
 
-    // fov 
+    // fov，分辨率 
     nh.param<float>("removert/sequence_vfov", kVFOV, 50.0);
     nh.param<float>("removert/sequence_hfov", kHFOV, 360.0);
     kFOV = std::pair<float, float>(kVFOV, kHFOV);
@@ -26,6 +27,7 @@ RosParamServer::RosParamServer()
 
     // sequcne system info 
     nh.param<std::vector<double>>("removert/ExtrinsicLiDARtoPoseBase", kVecExtrinsicLiDARtoPoseBase, std::vector<double>());
+    // > map结构不必进行对象拷贝，直接再对象内存上进行操作，RowMajor意为列优先存储，只是相比于ColMajor行优先存储更快而已，两者结果相同
     kSE3MatExtrinsicLiDARtoPoseBase = Eigen::Map<const Eigen::Matrix<double, -1, -1, Eigen::RowMajor>>(kVecExtrinsicLiDARtoPoseBase.data(), 4, 4);
     kSE3MatExtrinsicPoseBasetoLiDAR = kSE3MatExtrinsicLiDARtoPoseBase.inverse();
 
