@@ -11,7 +11,7 @@ SC_lio-sam_Relocation: fyx's github
 about the guide video of file_player_mulran and lt_slam (or lt_removert that GK promised) on YouTube:
 file_player_mulran: https://www.youtube.com/watch?v=uU-FC-GmHXA&t=45s
 lt_slam: https://www.youtube.com/watch?v=BXBTVurNToU
-lt_removert: waiting...
+lt_removert: https://github.com/irapkaist/removert
 
 
 Secondly, you should compile them correctly
