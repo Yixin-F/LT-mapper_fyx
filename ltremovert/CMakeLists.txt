@@ -79,7 +79,6 @@ link_directories(
 add_executable( ${PROJECT_NAME}_removert src/removert_main.cpp
   src/utility.cpp 
   src/RosParamServer.cpp
-  src/Session.cpp
   src/Removerter.cpp
 )
 

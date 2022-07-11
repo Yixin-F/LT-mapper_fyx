@@ -23,27 +23,26 @@ public:
     float kHFOV;
     std::pair<float, float> kFOV;
 
-    float kDownsampleVoxelSize;
-
-    // pose base where  
+    // sequence info 
     std::vector<double> kVecExtrinsicLiDARtoPoseBase; 
     Eigen::Matrix4d kSE3MatExtrinsicLiDARtoPoseBase;
         // Base is where of the pose writtened (e.g., for KITTI, poses is usually in camera)
         // if the pose file is obtained via lidar odometry itself, then kMatExtrinsicLiDARtoBase is eye(4)
     Eigen::Matrix4d kSE3MatExtrinsicPoseBasetoLiDAR;
 
-    // config
+    // sequence bin files
     bool isScanFileKITTIFormat_;
 
-    // knn
-    int kNumKnnPointsToCompare;// static sensitivity (increase this value, less static structure will be removed at the scan-side removal stage)
-    float kScanKnnAndMapKnnAvgDiffThreshold; // static sensitivity (decrease this value, less static structure will be removed at the scan-side removal stage)
+    std::string sequence_scan_dir_;
+    std::vector<std::string> sequence_scan_names_;
+    std::vector<std::string> sequence_scan_paths_;
+    int num_total_scans_of_sequence_;
+    float kDownsampleVoxelSize;
 
-    // sessions' paths 
-    std::string central_sess_scan_dir_; 
-    std::string central_sess_pose_path_; 
-    std::string query_sess_scan_dir_; 
-    std::string query_sess_pose_path_; 
+    // sequence pose file
+    std::string sequence_pose_path_;
+    std::vector<Eigen::Matrix4d> sequence_scan_poses_;
+    std::vector<Eigen::Matrix4d> sequence_scan_inverse_poses_; // used for global to local
 
     // target region to removerting 
     int start_idx_;
@@ -53,8 +52,6 @@ public:
     bool use_keyframe_meter_; 
     int keyframe_gap_;
     float keyframe_gap_meter_;
-
-    int repeat_removert_iter_;
 
     // 
     std::vector<float> remove_resolution_list_;
@@ -85,6 +82,19 @@ public:
     std::pair<float, float> kRangeColorAxis; // meter
     std::pair<float, float> kRangeColorAxisForDiff; // meter 
 
+    image_transport::ImageTransport ROSimg_transporter_;
+
+    sensor_msgs::ImagePtr scan_rimg_msg_;
+    image_transport::Publisher scan_rimg_msg_publisher_;
+
+    sensor_msgs::ImagePtr map_rimg_msg_;
+    image_transport::Publisher map_rimg_msg_publisher_;
+
+    sensor_msgs::ImagePtr diff_rimg_msg_;
+    image_transport::Publisher diff_rimg_msg_publisher_;
+
+    sensor_msgs::ImagePtr map_rimg_ptidx_msg_;
+    image_transport::Publisher map_rimg_ptidx_msg_publisher_;
 
     //
     bool kFlagSaveMapPointcloud;

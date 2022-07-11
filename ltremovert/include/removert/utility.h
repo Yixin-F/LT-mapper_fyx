@@ -88,21 +88,16 @@ using std::endl;
 // )
 
 using PointType = pcl::PointXYZI;
-using pcPtr = pcl::PointCloud<PointType>::Ptr;
 
-const float kFlagNoPOINT = 10000.0; // no point constant, 10000 has no meaning, but must be larger than the maximum scan range (e.g., 200 meters)
-const float kValidDiffUpperBound = 200.0; // must smaller than kFlagNoPOINT
-
-// ? 球形点？？什么意思，就是rangeimage上的点信息
 struct SphericalPoint
 {
-    float az; // azimuth，方位角
-    float el; // elevation，高度
-    float r; // radius，距离
+    float az; // azimuth 
+    float el; // elevation
+    float r; // radius
 };
 
-float rad2deg(float radians);
-float deg2rad(float degrees);
+inline float rad2deg(float radians);
+inline float deg2rad(float degrees);
 
 void readBin(std::string _bin_path, pcl::PointCloud<PointType>::Ptr _pcd_ptr);
 
@@ -127,34 +122,7 @@ cv::Mat convertColorMappedImg (const cv::Mat &_src, std::pair<T, T> _caxis)
   return image_dst;
 }
 
-pcl::PointCloud<PointType>::Ptr parseProjectedPoints(const pcl::PointCloud<PointType>::Ptr &_scan,
-                                                                    const std::pair<float, float> _fov, /* e.g., [vfov = 50 (upper 25, lower 25), hfov = 360] */
-                                                                    const std::pair<int, int> _rimg_size);
-
-std::pair<cv::Mat, cv::Mat> map2RangeImg(const pcl::PointCloud<PointType>::Ptr &_scan,
-                                                        const std::pair<float, float> _fov, /* e.g., [vfov = 50 (upper 25, lower 25), hfov = 360] */
-                                                        const std::pair<int, int> _rimg_size);
-
-void transformGlobalMapToLocal(
-    const pcl::PointCloud<PointType>::Ptr &_map_global,
-    Eigen::Matrix4d _base_pose_inverse, Eigen::Matrix4d _base2lidar, 
-    pcl::PointCloud<PointType>::Ptr &_map_local);
-
-void octreeDownsampling(const pcl::PointCloud<PointType>::Ptr &_src, pcl::PointCloud<PointType>::Ptr &_to_save);
-void octreeDownsampling(const pcl::PointCloud<PointType>::Ptr &_src, pcl::PointCloud<PointType>::Ptr &_to_save,
-                                    const float _kDownsampleVoxelSize);
-
 std::set<int> convertIntVecToSet(const std::vector<int> & v);
-
-pcl::PointCloud<PointType>::Ptr mergeScansWithinGlobalCoordUtil(
-    const std::vector<pcl::PointCloud<PointType>::Ptr> &_scans,
-    const std::vector<Eigen::Matrix4d> &_scans_poses, Eigen::Matrix4d _lidar2base);
-
-pcl::PointCloud<PointType>::Ptr local2global(const pcl::PointCloud<PointType>::Ptr &_scan_local, 
-                                const Eigen::Matrix4d &_scan_pose, const Eigen::Matrix4d &_base2lidar);
-
-pcl::PointCloud<PointType>::Ptr global2local(const pcl::PointCloud<PointType>::Ptr &_scan_global, 
-                                const Eigen::Matrix4d &_scan_pose_inverse, const Eigen::Matrix4d &_base2lidar);
 
 template <typename T>
 std::vector<T> linspace(T a, T b, size_t N) {
