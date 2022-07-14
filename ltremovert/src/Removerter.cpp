@@ -25,20 +25,28 @@ Removerter::Removerter()
 {
     subLaserCloud = nh.subscribe<sensor_msgs::PointCloud2>("/os1_points", 5, &Removerter::cloudHandler, this, ros::TransportHints().tcpNoDelay());
 
-    // voxelgrid generates warnings frequently, so verbose off + ps. recommend to use octree (see makeGlobalMap)
-    pcl::console::setVerbosityLevel(pcl::console::L_ERROR); 
+    // ! voxelgrid generates warnings frequently, so verbose off + ps. recommend to use octree (see makeGlobalMap)
+    pcl::console::setVerbosityLeve(pcl::console::L_ERROR); 
     // pcl::console::setVerbosityLevel(pcl::console::L_ALWAYS);
 
-    nh.param<int>("removert/num_nn_points_within", kNumKnnPointsToCompare, 3); // using higher, more strict static 
-    nh.param<float>("removert/dist_nn_points_within", kScanKnnAndMapKnnAvgDiffThreshold, 0.1); // using smaller, more strict static 
+    nh.param<int>("removert/num_nn_points_within", kNumKnnPointsToCompare, 3); // > using higher, more strict static 
+    nh.param<float>("removert/dist_nn_points_within", kScanKnnAndMapKnnAvgDiffThreshold, 0.1); // > using smaller, more strict static 
 
     if( save_pcd_directory_.substr(save_pcd_directory_.size()-1, 1) != std::string("/") )
         save_pcd_directory_ = save_pcd_directory_ + "/";
     fsmkdir(save_pcd_directory_);
-    scan_static_save_dir_ = save_pcd_directory_ + "scan_static"; fsmkdir(scan_static_save_dir_);
-    scan_dynamic_save_dir_ = save_pcd_directory_ + "scan_dynamic"; fsmkdir(scan_dynamic_save_dir_);
-    map_static_save_dir_ = save_pcd_directory_ + "map_static"; fsmkdir(map_static_save_dir_);
-    map_dynamic_save_dir_ = save_pcd_directory_ + "map_dynamic"; fsmkdir(map_dynamic_save_dir_);
+
+    scan_static_save_dir_ = save_pcd_directory_ + "scan_static"; 
+    fsmkdir(scan_static_save_dir_);
+
+    scan_dynamic_save_dir_ = save_pcd_directory_ + "scan_dynamic"; 
+    fsmkdir(scan_dynamic_save_dir_);
+
+    map_static_save_dir_ = save_pcd_directory_ + "map_static"; 
+    fsmkdir(map_static_save_dir_);
+
+    map_dynamic_save_dir_ = save_pcd_directory_ + "map_dynamic"; 
+    fsmkdir(map_dynamic_save_dir_);
 
     allocateMemory();
 
@@ -86,7 +94,10 @@ void Removerter::allocateMemory()
 
 Removerter::~Removerter(){}
 
-
+/**
+ * @brief only use valid scans
+ * 
+ */
 void Removerter::parseValidScanInfo( void )
 {
     int num_valid_parsed {0};
@@ -94,7 +105,7 @@ void Removerter::parseValidScanInfo( void )
 
     for(int curr_idx=0; curr_idx < int(sequence_scan_paths_.size()); curr_idx++) 
     {
-        // check the scan idx within the target idx range 
+        // check the scan idx within the target idx range, only use scan whose idx is between start_idx_ and end_idx_
         if(curr_idx > end_idx_ || curr_idx < start_idx_) {
             curr_idx++;
             continue;
@@ -131,7 +142,10 @@ void Removerter::parseValidScanInfo( void )
     }
 } // parseValidScanInfo
 
-
+/**
+ * @brief   read valid scans
+ * 
+ */
 void Removerter::readValidScans( void )
 // for target range of scan idx 
 {
@@ -148,7 +162,7 @@ void Removerter::readValidScans( void )
             pcl::io::loadPCDFile<PointType> (_scan_path, *points); // saved from SC-LIO-SAM's pcd binary (.pcd)
         }
 
-        // pcdown
+        // pcdown, downsize filter
         pcl::VoxelGrid<PointType> downsize_filter;
         downsize_filter.setLeafSize(kDownsampleVoxelSize, kDownsampleVoxelSize, kDownsampleVoxelSize);
         downsize_filter.setInputCloud(points);
@@ -171,11 +185,20 @@ void Removerter::readValidScans( void )
     cout << endl;
 } // readValidScans
 
-
+/**
+ * @brief  将点云转换为RI
+ * 
+ * @param[in] _scan  点云
+ * @param[in] _fov  点云的大小(see note)
+ * @param[in] _rimg_size  RI分辨率
+ * @return std::pair<cv::Mat, cv::Mat>  RI&Idx
+ * @note default [vfov = 50 (upper 25, lower 25), hfov = 360] 
+ */
 std::pair<cv::Mat, cv::Mat> Removerter::map2RangeImg(const pcl::PointCloud<PointType>::Ptr& _scan, 
-                      const std::pair<float, float> _fov, /* e.g., [vfov = 50 (upper 25, lower 25), hfov = 360] */
+                      const std::pair<float, float> _fov, 
                       const std::pair<int, int> _rimg_size)
 {
+    
     const float kVFOV = _fov.first;
     const float kHFOV = _fov.second;
     
@@ -204,8 +227,8 @@ std::pair<cv::Mat, cv::Mat> Removerter::map2RangeImg(const pcl::PointCloud<Point
         int pixel_idx_col = int(std::min(std::max(std::round(kNumRimgCol * ((rad2deg(sph_point.az) + (kHFOV/float(2.0))) / (kHFOV - float(0.0)))), float(lower_bound_col_idx)), float(upper_bound_col_idx)));
 
         float curr_range = sph_point.r;
-
-        // @ Theoretically, this if-block would have race condition (i.e., this is a critical section), 
+        
+        // ? @ Theoretically, this if-block would have race condition (i.e., this is a critical section), 
         // @ But, the resulting range image is acceptable (watching via Rviz), 
         // @      so I just naively applied omp pragma for this whole for-block (2020.10.28)
         // @ Reason: because this for loop is splited by the omp, points in a single splited for range do not race among them, 
@@ -221,7 +244,10 @@ std::pair<cv::Mat, cv::Mat> Removerter::map2RangeImg(const pcl::PointCloud<Point
     return std::pair<cv::Mat, cv::Mat>(rimg, rimg_ptidx);
 } // map2RangeImg
 
-
+/**
+ * @brief 与map2RangeImg区别？map&scan?
+ * 
+ */
 cv::Mat Removerter::scan2RangeImg(const pcl::PointCloud<PointType>::Ptr& _scan, 
                       const std::pair<float, float> _fov, /* e.g., [vfov = 50 (upper 25, lower 25), hfov = 360] */
                       const std::pair<int, int> _rimg_size)
@@ -270,7 +296,13 @@ cv::Mat Removerter::scan2RangeImg(const pcl::PointCloud<PointType>::Ptr& _scan,
     return rimg;
 } // scan2RangeImg
 
-
+/**
+ * @brief 逐帧组成全局地图
+ * 
+ * @param[in] _scans  某帧点云
+ * @param[in] _scans_poses  某帧点云位姿
+ * @param[in] _ptcloud_to_save  组成的地图
+ */
 void Removerter::mergeScansWithinGlobalCoord( 
         const std::vector<pcl::PointCloud<PointType>::Ptr>& _scans, 
         const std::vector<Eigen::Matrix4d>& _scans_poses,
@@ -292,7 +324,12 @@ void Removerter::mergeScansWithinGlobalCoord(
     }
 } // mergeScansWithinGlobalCoord
 
-
+/**
+ * @brief  octree降采样
+ * 
+ * @param[in] _src  原始点云
+ * @param[in] _to_save  输出点云
+ */
 void Removerter::octreeDownsampling(const pcl::PointCloud<PointType>::Ptr& _src, pcl::PointCloud<PointType>::Ptr& _to_save)
 {
     pcl::octree::OctreePointCloudVoxelCentroid<PointType> octree( kDownsampleVoxelSize );
@@ -310,7 +347,10 @@ void Removerter::octreeDownsampling(const pcl::PointCloud<PointType>::Ptr& _src,
     cout << endl;
 } // octreeDownsampling
 
-
+/**
+ * @brief 保存全局地图
+ * 
+ */
 void Removerter::makeGlobalMap( void )
 {
     // transform local to global and merging the scans 
@@ -402,7 +442,7 @@ void Removerter::transformGlobalMapToLocal(
 
 } // transformGlobalMapToLocal
 
-
+// > @ 下面三个函数是根据索引来<提取出来>一系列点云
 void Removerter::parseMapPointcloudSubsetUsingPtIdx( std::vector<int>& _point_indexes, pcl::PointCloud<PointType>::Ptr& _ptcloud_to_save ) 
 {
     // extractor
@@ -410,7 +450,7 @@ void Removerter::parseMapPointcloudSubsetUsingPtIdx( std::vector<int>& _point_in
     boost::shared_ptr<std::vector<int>> index_ptr = boost::make_shared<std::vector<int>>(_point_indexes);
     extractor.setInputCloud(map_global_curr_); 
     extractor.setIndices(index_ptr);
-    extractor.setNegative(false); // If set to true, you can extract point clouds outside the specified index
+    extractor.setNegative(false); // ! If set to true, you can extract point clouds outside the specified index
 
     // parse 
     _ptcloud_to_save->clear();
@@ -490,7 +530,14 @@ void Removerter::saveCurrentStaticAndDynamicPointCloudLocal( int _base_node_idx 
 
 } // saveCurrentStaticAndDynamicPointCloudLocal
 
-
+/**
+ * @brief  筛选动态点索引idx，Remove
+ * 
+ * @param[in] _scan_rimg  判断是否动态点的所在RI
+ * @param[in] _diff_rimg  差异RI
+ * @param[in] _map_rimg_ptidx  idx RI
+ * @return std::vector<int>  动态点idx
+ */
 std::vector<int> Removerter::calcDescrepancyAndParseDynamicPointIdx
     (const cv::Mat& _scan_rimg, const cv::Mat& _diff_rimg, const cv::Mat& _map_rimg_ptidx)
 {
@@ -520,7 +567,11 @@ std::vector<int> Removerter::calcDescrepancyAndParseDynamicPointIdx
     return dynamic_point_indexes;
 } // calcDescrepancyAndParseDynamicPointIdx
 
-
+/**
+ * @brief 用来组成submap，来滤除动态点
+ * 
+ * @param[in] _center_scan_idx 
+ */
 void Removerter::takeGlobalMapSubsetWithinBall( int _center_scan_idx )
 {
     Eigen::Matrix4d center_pose_se3 = scan_poses_.at(_center_scan_idx);
@@ -531,11 +582,16 @@ void Removerter::takeGlobalMapSubsetWithinBall( int _center_scan_idx )
 
     std::vector<int> subset_indexes;
     std::vector<float> pointSearchSqDisGlobalMap;
-    kdtree_map_global_curr_->radiusSearch(center_pose, kBallSize, subset_indexes, pointSearchSqDisGlobalMap, 0);
+    kdtree_map_global_curr_->radiusSearch(center_pose, kBallSize, subset_indexes, pointSearchSqDisGlobalMap, 0); // ? 0，没有进行搜索？是查找全部
     parseMapPointcloudSubsetUsingPtIdx(subset_indexes, map_subset_global_curr_);
 } // takeMapSubsetWithinBall
 
-
+/**
+ * @brief 对所有帧的RI，计算在特定分辨率下的动态点
+ * 
+ * @param[in] _rimg_shape 
+ * @return std::vector<int> 
+ */
 std::vector<int> Removerter::calcDescrepancyAndParseDynamicPointIdxForEachScan( std::pair<int, int> _rimg_shape )
 {   
     std::vector<int> dynamic_point_indexes;
@@ -549,19 +605,24 @@ std::vector<int> Removerter::calcDescrepancyAndParseDynamicPointIdxForEachScan( 
 
         // map's pointcloud to range img 
         if( kUseSubsetMapCloud ) {
-            takeGlobalMapSubsetWithinBall(idx_scan);
+            takeGlobalMapSubsetWithinBall(idx_scan); // ? 有一个滤除过程，为什么是一个滤除过程
             transformGlobalMapSubsetToLocal(idx_scan); // the most time comsuming part 1 
         } else {
             // if the input map size (of a batch) is short, just using this line is more fast. 
             // - e.g., 100-1000m or ~5 million points are ok, empirically more than 10Hz 
             transformGlobalMapToLocal(idx_scan);
         }
+
+        // ! 这里边涉及到一个重叠点云问题，不然在计算动态点时会出现差错，也谈不上差错，只能说冗余
+        // ! 并且这里的map_local_curr_ is submap
         auto [map_rimg, map_rimg_ptidx] = map2RangeImg(map_local_curr_, kFOV, _rimg_shape); // the most time comsuming part 2 -> so openMP applied inside
 
         // diff range img 
         const int kNumRimgRow = _rimg_shape.first;
         const int kNumRimgCol = _rimg_shape.second;
         cv::Mat diff_rimg = cv::Mat(kNumRimgRow, kNumRimgCol, CV_32FC1, cv::Scalar::all(0.0)); // float matrix, save range value 
+    
+        // > 计算RI差异
         cv::absdiff(scan_rimg, map_rimg, diff_rimg);
 
         // parse dynamic points' indexes: rule: If a pixel value of diff_rimg is larger, scan is the further - means that pixel of submap is likely dynamic.
@@ -586,21 +647,32 @@ std::vector<int> Removerter::calcDescrepancyAndParseDynamicPointIdxForEachScan( 
     return dynamic_point_indexes_unique;
 } // calcDescrepancyForEachScan
 
-
+/**
+ * @brief  Revert，从动态点中恢复误删除的静态点
+ * 
+ * @param[in] _dynamic_point_indexes  动态点索引vector
+ * @param[in] _num_all_points  submap点数
+ * @return std::vector<int>  
+ */
 std::vector<int> Removerter::getStaticIdxFromDynamicIdx(const std::vector<int>& _dynamic_point_indexes, int _num_all_points)
 {
-    std::vector<int> pt_idx_all = linspace<int>(0, _num_all_points, _num_all_points);
+    std::vector<int> pt_idx_all = linspace<int>(0, _num_all_points, _num_all_points); // ? 就这一步恢复了？？
 
     std::set<int> pt_idx_all_set (pt_idx_all.begin(), pt_idx_all.end());
     for(auto& _dyna_pt_idx: _dynamic_point_indexes) {
-        pt_idx_all_set.erase(_dyna_pt_idx);
+        pt_idx_all_set.erase(_dyna_pt_idx); // 恢复误删除的静态点
     }
 
     std::vector<int> static_point_indexes (pt_idx_all_set.begin(), pt_idx_all_set.end());
     return static_point_indexes;
 } // getStaticIdxFromDynamicIdx
 
-
+/**
+ * @brief  从动态点中恢复静态点索引
+ * 
+ * @param[in] _dynamic_point_indexes 
+ * @return std::vector<int> 
+ */
 std::vector<int> Removerter::getGlobalMapStaticIdxFromDynamicIdx(const std::vector<int>& _dynamic_point_indexes)
 {
     int num_all_points = map_global_curr_->points.size();
@@ -619,7 +691,11 @@ void Removerter::saveCurrentStaticMapHistory(void)
     static_map_global_history_.emplace_back(map_global_curr_static);
 } // saveCurrentStaticMapHistory
 
-
+/**
+ * @brief  Remove主函数
+ * 
+ * @param[in] _res_alpha  RI分辨率缩放因子
+ */
 void Removerter::removeOnce( float _res_alpha )
 {
     // filter spec (i.e., a shape of the range image) 
@@ -651,7 +727,11 @@ void Removerter::removeOnce( float _res_alpha )
 
 } // removeOnce
 
-
+/**
+ * @brief  // ! Revert主函数 TODO 还没写好
+ * 
+ * @param[in] _res_alpha RI分辨率缩放因子
+ */
 void Removerter::revertOnce( float _res_alpha )
 {
     std::pair<int, int> rimg_shape = resetRimgSize(kFOV, _res_alpha);

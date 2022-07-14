@@ -13,7 +13,7 @@ RosParamServer::RosParamServer()
     diff_rimg_msg_publisher_ = ROSimg_transporter_.advertise("/diff_rimg_single", 10);
     map_rimg_ptidx_msg_publisher_ = ROSimg_transporter_.advertise("/map_rimg_ptidx_single", 10);
 
-    nh.param<float>("removert/rimg_color_min", rimg_color_min_, 0.0);
+    nh.param<float>("removert/rimg_color_min", rimg_color_min_, 0.0);  // 彩色上下界
     nh.param<float>("removert/rimg_color_max", rimg_color_max_, 10.0);
     kRangeColorAxis = std::pair<float, float> {rimg_color_min_, rimg_color_max_}; // meter
     kRangeColorAxisForDiff = std::pair<float, float>{0.0, 0.5}; // meter 
@@ -63,7 +63,7 @@ RosParamServer::RosParamServer()
             ith_pose_vec.emplace_back(double(1.0));
         }
     
-        // vec to eig
+        // vec to eig，齐次变换矩阵代表位姿
         Eigen::Matrix4d ith_pose = Eigen::Map<const Eigen::Matrix<double, -1, -1, Eigen::RowMajor>>(ith_pose_vec.data(), 4, 4);
         Eigen::Matrix4d ith_pose_inverse = ith_pose.inverse();
 

@@ -15,6 +15,7 @@ private:
     int kNumKnnPointsToCompare;// static sensitivity (increase this value, less static structure will be removed at the scan-side removal stage)
     float kScanKnnAndMapKnnAvgDiffThreshold; // static sensitivity (decrease this value, less static structure will be removed at the scan-side removal stage)
 
+    // ! 以下是存放的所有帧的vector
     std::vector<std::string> sequence_valid_scan_names_;
     std::vector<std::string> sequence_valid_scan_paths_;
     std::vector<pcl::PointCloud<PointType>::Ptr> scans_;
@@ -54,9 +55,9 @@ private:
 
     unsigned long kPauseTimeForClearStaticScanVisualization = 1000; // microsec
 
-    // NOT recommend to use for under 5 million points map input (becausing not-using is just faster)
+    // ! NOT recommend to use for under 5 million points map input (becausing not-using is just faster)，因为组成submap太大了
     const bool kUseSubsetMapCloud = false; 
-    const float kBallSize = 80.0; // meter
+    const float kBallSize = 80.0; // meter，default 80 有点大了 :)
 
 public:
     Removerter();

@@ -107,6 +107,14 @@ SphericalPoint cart2sph(const PointType & _cp);
 
 std::pair<int, int> resetRimgSize(const std::pair<float, float> _fov, const float _resize_ratio);
 
+/**
+ * @brief   设定上下界的彩色图片转换
+ * 
+ * @tparam T 
+ * @param[in] _src  原始图片
+ * @param[in] _caxis  色彩上下界
+ * @return cv::Mat  新的彩色图片
+ */
 template<typename T>
 cv::Mat convertColorMappedImg (const cv::Mat &_src, std::pair<T, T> _caxis)
 {
