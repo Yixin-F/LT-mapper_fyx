@@ -118,12 +118,17 @@
 		"cwctype": "cpp",
 		"functional": "cpp",
 		"optional": "cpp",
-		"string_view": "cpp"
+		"string_view": "cpp",
+		"strstream": "cpp",
+		"codecvt": "cpp",
+		"csignal": "cpp",
+		"forward_list": "cpp",
+		"unordered_set": "cpp",
+		"typeindex": "cpp"
 	},
     "python.autoComplete.extraPaths": [
         "/home/fyx/lt-mapper/devel/lib/python2.7/dist-packages",
-        "/home/fyx/lab404_ws/devel/lib/python2.7/dist-packages",
-        "/home/fyx/fyx_ws/devel/lib/python2.7/dist-packages",
         "/opt/ros/melodic/lib/python2.7/dist-packages"
-    ]
+	],
+	"C_Cpp.errorSquiggles": "Disabled"
 }
