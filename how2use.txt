@@ -75,5 +75,19 @@ the result is perfect ! :)
 Congratulations !! You have finished the LT-SLAM !!
 
 
+---------------------------------------------------------------------------------------------------------------------------
+
+
+2022/7/15  LT-Removert(no revert) process:
+
+0.lidar odometry poses (kitti-format) were saved by SC_LIO-sam
+
+1.use above poses to remove dynamic points by Removert (just remove and no revert :))
+	--change the params_mulran_scliosam.yaml
+	--roslaunch run_scliosam.launch
+
+Done... but not perfect, because the part of revert hasn't been completed ;)
+
+
 
 
