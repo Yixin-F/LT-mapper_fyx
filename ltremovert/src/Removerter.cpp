@@ -26,7 +26,7 @@ Removerter::Removerter()
     subLaserCloud = nh.subscribe<sensor_msgs::PointCloud2>("/os1_points", 5, &Removerter::cloudHandler, this, ros::TransportHints().tcpNoDelay());
 
     // ! voxelgrid generates warnings frequently, so verbose off + ps. recommend to use octree (see makeGlobalMap)
-    pcl::console::setVerbosityLeve(pcl::console::L_ERROR); 
+    pcl::console::setVerbosityLevel(pcl::console::L_ERROR); 
     // pcl::console::setVerbosityLevel(pcl::console::L_ALWAYS);
 
     nh.param<int>("removert/num_nn_points_within", kNumKnnPointsToCompare, 3); // > using higher, more strict static 
