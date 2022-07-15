@@ -6,13 +6,13 @@ removert:
   # @ save option 
   saveMapPCD: true 
   saveCleanScansPCD: true
-  save_pcd_directory: "/home/user/Desktop/data/riverside01/removert/results/" # replace to your path (please use an absolute path)
+  save_pcd_directory: "/home/fyx/lt-mapper/src/Mulran DCC01_dataset/data_ltremovert/" # replace to your path (please use an absolute path)
 
 
   # @ sequence info (replace to your paths) 
   #   please follow the KITTI odometry dataset's scan and pose formats (i.e., make them .bin and line-by-line corresponding se3 poses composed of 12 numbers)
-  sequence_scan_dir: "/home/user/Desktop/data/riverside01/sc-lio-sam/Scans/"
-  sequence_pose_path: "/home/user/Desktop/data/riverside01/sc-lio-sam/optimized_poses.txt"
+  sequence_scan_dir: "/home/fyx/lt-mapper/src/Mulran DCC01_dataset/Scans/"
+  sequence_pose_path: "/home/fyx/lt-mapper/src/Mulran DCC01_dataset/optimized_poses.txt"
 
   sequence_vfov: 50 # including upper and lower fovs, 
                     # for example, KITTI's HDL64E is 2 + 24.9 ~ 27 deg. (so 25 + 25 = 50 is recommended because it is enough)
