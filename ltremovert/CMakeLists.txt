@@ -92,4 +92,21 @@ target_link_libraries(${PROJECT_NAME}_removert
   stdc++fs
 )
 
+# segmentation
+add_executable( ${PROJECT_NAME}_segment src/segment_main.cpp
+  src/utility.cpp 
+  src/RosParamServer.cpp
+  src/segment.cpp
+)
+
+add_dependencies(${PROJECT_NAME}_segment ${catkin_EXPORTED_TARGETS})
+target_compile_options(${PROJECT_NAME}_segment PRIVATE ${OpenMP_CXX_FLAGS})
+target_link_libraries(${PROJECT_NAME}_segment
+  ${catkin_LIBRARIES} 
+  ${PCL_LIBRARIES} 
+  ${OpenCV_LIBRARIES}
+  ${OpenMP_CXX_FLAGS}
+  stdc++fs
+)
+
 

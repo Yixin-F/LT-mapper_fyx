@@ -11,6 +11,7 @@
     <!--- Removert -->
     <!-- <node pkg="$(arg project)" type="$(arg project)_removert"   name="$(arg project)_removert"    output="screen" 	respawn="true"/> -->
     <node pkg="$(arg project)" type="$(arg project)_removert"   name="$(arg project)_removert"   output="screen"/>
+    
 
     <!--- Run Rqt (show range images-->
     <!-- <include file="$(find lio_sam)/launch/include/module_rviz.launch" /> -->

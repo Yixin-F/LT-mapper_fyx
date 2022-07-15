@@ -7,7 +7,7 @@ removert:
   saveMapPCD: true 
   saveCleanScansPCD: true
   save_pcd_directory: "/home/fyx/lt-mapper/src/Mulran DCC01_dataset/data_ltremovert/" # replace to your path (please use an absolute path)
-
+  save_seg_directory: "/home/fyx/lt-mapper/src/segmentation_dataset/"
 
   # @ sequence info (replace to your paths) 
   #   please follow the KITTI odometry dataset's scan and pose formats (i.e., make them .bin and line-by-line corresponding se3 poses composed of 12 numbers)
