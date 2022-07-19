@@ -18,7 +18,7 @@ private:
     std::string savePath_in = savePath + "in/";
     std::string savePath_out = savePath + "out/";
 
-    float kDownsampleVoxelSize = 0.05;
+    float kDownsampleVoxelSize = 0.1;
     const float kFlagNoPOINT = 10000.0;
 
     std::vector<float> rimg_resolution_list_;
@@ -33,7 +33,7 @@ public:
     std::vector<pcl::PointCloud<PointType>::Ptr> far_PointCloud;
     std::vector<pcl::PointCloud<PointType>::Ptr> seg_PointCloud;
 
-    // > remember to clear in every scan segmentation
+    // > remember to clear in every scan idx&result segmentation
     std::vector<int> gd_PointCloudIdx;
     std::vector<int> far_PointCloudIdx;
     std::vector<int> seg_PointCloudIdx;
@@ -56,7 +56,9 @@ public:
     std::vector<int> farExtract(const cv::Mat& _rimg);
     // TODO: segmentation Aft ground&far Extract
 
-    void prasePointCloudUsingPtIdx(const pcl::PointCloud<PointType>& _sr_PointCloud, const std::vector<int>& _ptIdx);
+    pcl::PointCloud<PointType>::Ptr prasePointCloudUsingPtIdx(const pcl::PointCloud<PointType>::Ptr& _sr_PointCloud, const std::vector<int>& _ptIdx);
+
+    cv::Mat multiRimg2FindEdgeline(const cv::Mat& _res1_Rimg, const cv::Mat& _res2_Rimg);
 
     void savePtAndRimgResult();
 

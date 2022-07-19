@@ -50,12 +50,14 @@ void Segment::allocateMemory(){
         savePath_out = savePath_out + "/";
     fsmkdir(savePath_out);
 
+    // rimg_resolution_list_.emplace_back(2.0);
+    rimg_resolution_list_.emplace_back(1.7);
     rimg_resolution_list_.emplace_back(1.4);
     rimg_resolution_list_.emplace_back(1.1);
     
+    // TODO: config.yaml
     kFOV = std::pair<float, float>(50.0, 360.0);
-
-    color_axis = std::pair<float, float>(0.0, 100.0);
+    color_axis = std::pair<float, float>(0.0, 80.0);
 }
 
 void Segment::readExamplePCD(){
@@ -71,6 +73,7 @@ void Segment::readExamplePCD(){
             pcl::io::loadPCDFile<PointType>(soure_PointCloudPathstr[ii], *_scan);
 
         // downsample and save
+        // TODO: 一个有效的降采样，Octree，是否使用line补全(插值)
         pcl::VoxelGrid<PointType> downsize_filter;
         pcl::PointCloud<PointType>::Ptr downsampled_scan (new pcl::PointCloud<PointType>);
         downsize_filter.setLeafSize(kDownsampleVoxelSize, kDownsampleVoxelSize, kDownsampleVoxelSize);
@@ -90,6 +93,14 @@ void Segment::readExamplePCD(){
 
 }
 
+/**
+ * @brief  scan2RangeImg
+ * 
+ * @param[in] _scan  scan
+ * @param[in] _fov  视角尺寸
+ * @param[in] _rimg_size  分辨率
+ * @return cv::Mat  Rimg
+ */
 cv::Mat Segment::scan2RangeImg(const pcl::PointCloud<PointType>::Ptr& _scan, 
                       const std::pair<float, float> _fov, 
                       const std::pair<int, int> _rimg_size)
@@ -111,7 +122,7 @@ cv::Mat Segment::scan2RangeImg(const pcl::PointCloud<PointType>::Ptr& _scan,
         PointType this_point = _scan->points[pt_idx];
         SphericalPoint sph_point = cart2sph(this_point);
 
-        // @ note about vfov: e.g., (+ V_FOV/2) to adjust [-15, 15] to [0, 30]
+        // @ note about vfov: e.g., (+ V_FOV/2) to adjust [-15, 15] to [0, 30], (+ H_FOV/2) to adjust [-180, 180] to [0, 360]
         // @ min and max is just for the easier (naive) boundary checks. 
         int lower_bound_row_idx {0}; 
         int lower_bound_col_idx {0};
@@ -122,6 +133,7 @@ cv::Mat Segment::scan2RangeImg(const pcl::PointCloud<PointType>::Ptr& _scan,
 
         float curr_range = sph_point.r;
 
+        // choose the nearier range
         if (curr_range < rimg.at<float>(pixel_idx_row, pixel_idx_col)){
             rimg.at<float>(pixel_idx_row, pixel_idx_col) = curr_range;
         }
@@ -130,6 +142,40 @@ cv::Mat Segment::scan2RangeImg(const pcl::PointCloud<PointType>::Ptr& _scan,
     return rimg;
 } // scan2RangeImg
 
+cv::Mat Segment::multiRimg2FindEdgeline(const cv::Mat& _res1_Rimg, const cv::Mat& _res2_Rimg){
+
+}
+
+/**
+ * @brief  extract Pt from sourcePt
+ * 
+ * @param[in] _sr_PointCloud  soure
+ * @param[in] _ptIdx  Idx
+ * @return pcl::PointCloud<PointType>::Ptr  TgPt
+ */
+pcl::PointCloud<PointType>::Ptr Segment::prasePointCloudUsingPtIdx(const pcl::PointCloud<PointType>::Ptr& _sr_PointCloud, const std::vector<int>& _ptIdx){
+
+    // extrator
+    pcl::ExtractIndices<PointType> exractor;
+    pcl::PointCloud<PointType>::Ptr _tg_PointCloud(new pcl::PointCloud<PointType>());
+    boost::shared_ptr<std::vector<int>> index_ptr = boost::make_shared<std::vector<int>>(_ptIdx);
+
+    extractor.setInputCloud(_sr_PointCloud); 
+    extractor.setIndices(index_ptr);
+    extractor.setNegative(false); // If set to true, you can extract point clouds outside the specified index
+
+    // parse 
+    _tg_PointCloud->clear();
+    extractor.filter(*_tg_PointCloud);
+
+    return _tg_PointCloud;
+}
+
+
+/**
+ * @brief  保存点云和Rimg
+ * 
+ */
 void Segment::savePtAndRimgResult(){
 
     std::cout << "scan2Rimg:" << std::endl;
@@ -156,10 +202,6 @@ Segment::~Segment(){}
 void Segment::fsmkdir(std::string _path){
     if (!fs::is_directory(_path) || !fs::exists(_path)) 
         fs::create_directories(_path);
-    else{
-        fs::remove(_path);
-        fs::create_directories(_path);  // new
-    } 
 }
 
 inline float Segment::rad2deg(float radians){
