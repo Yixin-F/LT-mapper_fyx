@@ -71,5 +71,3 @@
 ## Contact 
 - Maintained by Giseop Kim and please contact the author via ``giseop.kim@naverlabs.com``
 
-# LT-mapper_fyx
-# LT-mapper_fyx
